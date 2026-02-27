@@ -1,0 +1,44 @@
+# CortexDesk Application Configuration
+
+# Backend API
+backend:
+  host: localhost
+  port: 8000
+  cors_origins:
+    - http://localhost:3000
+    - http://localhost:5173
+
+# Desktop App
+desktop:
+  window:
+    width: 1400
+    height: 900
+    min_width: 800
+    min_height: 600
+
+# Feature Flags
+features:
+  live_meeting_mode: true
+  research_workspace: true
+  task_extraction: true
+  scheduler: true
+  knowledge_graph: true
+  external_network_enabled: false  # Must be false - no cloud calls
+
+# Storage Paths (relative to project root)
+storage:
+  db_path: data/db/cortexdesk.db
+  vector_db_path: data/embeddings
+  vault_path: data/vault
+  logs_path: data/logs
+
+# Security
+security:
+  encryption_enabled: true
+  require_permissions: true
+  audit_logging: true
+
+# Models Configuration (see models.yaml for details)
+models:
+  config_file: config/models.yaml
+

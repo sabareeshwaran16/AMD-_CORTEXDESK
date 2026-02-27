@@ -1,0 +1,18 @@
+# Optional AI + document processing dependencies (offline, local)
+
+# RAG & embeddings
+sentence-transformers==2.2.2
+chromadb==0.4.18
+ollama==0.1.6
+
+# NLP / preprocessing
+spacy==3.7.2
+dateparser==1.2.0
+
+# File processing
+pypdf2==3.0.1
+python-docx==1.1.0
+openpyxl==3.1.2
+pandas==2.1.4
+
+

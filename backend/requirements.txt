@@ -1,0 +1,28 @@
+#
+# IMPORTANT (Windows / low disk space):
+# This default requirements file is intentionally MINIMAL so the backend can boot.
+# Install AI features separately:
+#   pip install -r requirements-ai.txt
+#   pip install -r requirements-stt.txt
+#
+
+# FastAPI and server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+
+# Utilities
+python-multipart==0.0.6
+pyyaml==6.0.1
+python-dotenv==1.0.0
+cryptography==41.0.7
+watchdog==3.0.0
+
+# Logging
+loguru==0.7.2
+

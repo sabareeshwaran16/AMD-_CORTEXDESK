@@ -1,0 +1,9 @@
+Meeting Notes - Project Update
+
+TODO: John needs to complete the database migration by Friday
+Action: Sarah will review the API documentation
+Task: Mike should update the deployment scripts
+
+Decisions:
+- Decided to use PostgreSQL for the new system
+- Agreed to deploy to staging environment first

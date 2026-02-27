@@ -1,0 +1,33 @@
+# Default Permissions Configuration
+# User must explicitly grant access to data sources
+
+permissions:
+  # File System Access
+  file_access:
+    enabled: false
+    allowed_folders: []
+    # Example: ["C:/Users/YourName/Documents", "C:/Users/YourName/Downloads"]
+  
+  # Microphone Access (for Live Meeting Mode)
+  microphone:
+    enabled: false
+    # User must grant permission on first use
+  
+  # Email Import
+  email_import:
+    enabled: false
+    allowed_paths: []
+    # Example: ["C:/Users/YourName/Exports/outlook.pst"]
+  
+  # Chat Import
+  chat_import:
+    enabled: false
+    allowed_paths: []
+    # Example: ["C:/Users/YourName/Exports/whatsapp.txt"]
+
+# Data Retention
+retention:
+  keep_raw_files: true
+  keep_transcripts: true
+  auto_cleanup_days: null  # null = never auto-delete
+

@@ -1,0 +1,39 @@
+{
+  "system": {
+    "name": "Local AI Workspace Assistant",
+    "version": "1.0.0",
+    "mode": "offline"
+  },
+  "agents": {
+    "document_agent": {
+      "enabled": true,
+      "supported_formats": ["pdf", "docx", "xlsx", "txt"]
+    },
+    "meeting_agent": {
+      "enabled": true,
+      "confidence_threshold": 0.75
+    },
+    "task_agent": {
+      "enabled": true,
+      "auto_prioritize": true
+    },
+    "research_agent": {
+      "enabled": true,
+      "top_k_results": 5
+    }
+  },
+  "memory": {
+    "working_memory_ttl": 3600,
+    "episodic_retention_days": 365,
+    "vector_db_dimension": 384
+  },
+  "security": {
+    "encryption_enabled": true,
+    "require_confirmation": true
+  },
+  "performance": {
+    "max_concurrent_agents": 4,
+    "chunk_size": 1000,
+    "batch_size": 10
+  }
+}

@@ -1,0 +1,8 @@
+# Optional Speech-to-Text dependencies (offline)
+#
+# NOTE (Windows): `faster-whisper` may require large build deps (via `av`) and FFmpeg.
+# If install is heavy, you can postpone STT and use transcript upload first.
+
+faster-whisper==0.10.0
+
+

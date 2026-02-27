@@ -1,0 +1,105 @@
+<<<<<<< HEAD
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Data files (don't commit user data)
+data/uploads/*
+data/*.db
+data/*.pkl
+data/keys/*
+data/confirmations.json
+!data/uploads/.gitkeep
+!data/keys/.gitkeep
+=======
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+
+# Data directories (local only, never commit)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+>>>>>>> 4dea5a4cbc3df63cdf8c33784535c5395fb60160
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+<<<<<<< HEAD
+=======
+*~
+>>>>>>> 4dea5a4cbc3df63cdf8c33784535c5395fb60160
+
+# OS
+.DS_Store
+Thumbs.db
+
+<<<<<<< HEAD
+# Test files
+test_*.py
+debug_*.py
+*_test.txt
+final_verification.py
+system_check.py
+verify_fix.py
+=======
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+
+# Electron
+desktop/out/
+desktop/dist/
+
+# Python
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Models (large files)
+models/
+*.bin
+*.gguf
+*.safetensors
+
+# Chroma/Vector DB
+chroma_db/
+*.index
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+>>>>>>> 4dea5a4cbc3df63cdf8c33784535c5395fb60160
