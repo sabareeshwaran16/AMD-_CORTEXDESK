@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8001';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -19,13 +19,13 @@ const fileUploadClient = axios.create({
 });
 
 // Add error interceptor for better error messages
-fileUploadClient.interceptors.response.use(
+apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.code === 'ECONNABORTED') {
       error.message = 'Request timeout - the server took too long to respond. Please try again.';
     } else if (error.code === 'ERR_NETWORK' || !error.response) {
-      error.message = 'Cannot connect to backend server. Make sure the backend is running on http://localhost:8000';
+      error.message = 'Cannot connect to backend server. Make sure the backend is running on http://localhost:8001';
     } else if (error.response) {
       const status = error.response.status;
       const data = error.response.data;
@@ -48,34 +48,37 @@ export async function ingestFiles(files: File[]) {
     throw new Error('No files selected');
   }
 
-  // Validate file sizes (max 50MB per file)
-  const maxSize = 50 * 1024 * 1024; // 50MB
+  const maxSize = 50 * 1024 * 1024;
   for (const file of files) {
     if (file.size > maxSize) {
       throw new Error(`File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size is 50MB.`);
     }
   }
 
-  const form = new FormData();
-  files.forEach((f) => form.append('files', f));
-  
-  try {
-    // Use fileUploadClient which doesn't have default Content-Type header
-    // axios will automatically set multipart/form-data with boundary for FormData
-    const res = await fileUploadClient.post('/ingest/files', form, {
-      onUploadProgress: (progressEvent) => {
-        // Optional: can be used for progress bar
-        if (progressEvent.total) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          console.log(`Upload progress: ${percentCompleted}%`);
-        }
-      },
-    });
-    return res.data as { results: Array<any>; detected_tasks: Task[] };
-  } catch (error: any) {
-    // Re-throw with better error message
-    throw new Error(error.message || 'Failed to upload files. Please check your connection and try again.');
+  // Legacy backend: upload one file at a time
+  const results = [];
+  for (const file of files) {
+    const form = new FormData();
+    form.append('file', file);
+    
+    try {
+      const res = await fileUploadClient.post('/upload', form);
+      results.push({
+        filename: file.name,
+        status: res.data.status === 'processing' ? 'ingested' : res.data.status,
+        chunks_indexed: 0,
+        tasks_extracted: 0
+      });
+    } catch (error: any) {
+      results.push({
+        filename: file.name,
+        status: 'error',
+        error: error.message || 'Upload failed'
+      });
+    }
   }
+  
+  return { results, detected_tasks: [] };
 }
 
 export async function ingestText(text: string, source = 'manual') {
@@ -86,7 +89,7 @@ export async function ingestText(text: string, source = 'manual') {
 }
 
 export async function researchQuery(query: string, max_results = 5) {
-  const res = await apiClient.post('/research/query', { query, max_results });
+  const res = await apiClient.post('/search', { query });
   return res.data as { query: string; results: Array<any> };
 }
 
@@ -143,16 +146,10 @@ export async function scheduleProposals() {
 // Health check function
 export async function checkBackendHealth(): Promise<boolean> {
   try {
-    const res = await apiClient.get('/health', { timeout: 5000 });
-    return res.data?.status === 'healthy';
+    const res = await apiClient.get('/', { timeout: 5000 });
+    return res.data?.status === 'running';
   } catch {
-    // Try alternative endpoint
-    try {
-      const res = await apiClient.get('/api/health', { timeout: 5000 });
-      return res.data?.status === 'healthy';
-    } catch {
-      return false;
-    }
+    return false;
   }
 }
 

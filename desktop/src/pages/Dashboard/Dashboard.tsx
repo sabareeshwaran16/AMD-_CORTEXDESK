@@ -95,9 +95,9 @@ function Dashboard() {
       {backendConnected === false && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800 text-sm">
-            <strong>⚠️ Backend not connected:</strong> Cannot reach backend server at http://localhost:8000.
+            <strong>⚠️ Backend not connected:</strong> Cannot reach backend server at http://localhost:8001.
             <br />
-            Please make sure the backend is running: <code className="bg-red-100 px-2 py-1 rounded">cd backend && python -m app.main</code>
+            Please make sure the backend is running: <code className="bg-red-100 px-2 py-1 rounded">python src\api.py</code>
           </p>
         </div>
       )}

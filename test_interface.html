@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CortexDesk Upload Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #2980b9; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .task { padding: 10px; margin: 5px 0; background: #fff3cd; border-left: 3px solid #ffc107; }
+        .confirmation { padding: 10px; margin: 5px 0; background: #d1ecf1; border-left: 3px solid #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🔒 CortexDesk - Upload Test</h1>
+    
+    <div class="section">
+        <h2>1. Upload File</h2>
+        <input type="file" id="fileInput">
+        <button onclick="uploadFile()">Upload</button>
+        <div id="uploadResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Check Confirmations</h2>
+        <button onclick="checkConfirmations()">Refresh Confirmations</button>
+        <div id="confirmationsResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Check Tasks</h2>
+        <button onclick="checkTasks()">Refresh Tasks</button>
+        <div id="tasksResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8001';
+
+        async function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                const result = document.getElementById('uploadResult');
+                result.style.display = 'block';
+                result.innerHTML = `
+                    <strong>Upload Status:</strong> ${data.status}<br>
+                    <strong>File:</strong> ${data.filename}<br>
+                    <strong>Path:</strong> ${data.path || 'N/A'}<br>
+                    <br>
+                    <em>Wait a few seconds, then check confirmations...</em>
+                `;
+
+                // Auto-check confirmations after 3 seconds
+                setTimeout(checkConfirmations, 3000);
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+            }
+        }
+
+        async function checkConfirmations() {
+            try {
+                const response = await fetch(`${API}/confirmations`);
+                const data = await response.json();
+                
+                const result = document.getElementById('confirmationsResult');
+                result.style.display = 'block';
+                
+                if (data.count === 0) {
+                    result.innerHTML = '<strong>No pending confirmations</strong><br><em>Upload a document to extract tasks</em>';
+                } else {
+                    let html = `<strong>Pending Confirmations: ${data.count}</strong><br><br>`;
+                    data.pending.forEach(item => {
+                        html += `
+                            <div class="confirmation">
+                                <strong>ID:</strong> ${item.id}<br>
+                                <strong>Type:</strong> ${item.type}<br>
+                                <strong>Data:</strong> ${JSON.stringify(item.data)}<br>
+                                <button onclick="approve('${item.id}')">Approve</button>
+                                <button onclick="reject('${item.id}')">Reject</button>
+                            </div>
+                        `;
+                    });
+                    result.innerHTML = html;
+                }
+            } catch (error) {
+                alert('Failed to check confirmations: ' + error.message);
+            }
+        }
+
+        async function checkTasks() {
+            try {
+                const response = await fetch(`${API}/tasks`);
+                const data = await response.json();
+                
+                const result = document.getElementById('tasksResult');
+                result.style.display = 'block';
+                
+                if (data.count === 0) {
+                    result.innerHTML = '<strong>No tasks found</strong>';
+                } else {
+                    let html = `<strong>Tasks: ${data.count}</strong><br><br>`;
+                    data.tasks.forEach(task => {
+                        html += `
+                            <div class="task">
+                                <strong>${task.description || task.title || 'Task'}</strong><br>
+                                <em>Priority: ${task.priority || 'N/A'} | Deadline: ${task.deadline || 'N/A'}</em>
+                            </div>
+                        `;
+                    });
+                    result.innerHTML = html;
+                }
+            } catch (error) {
+                alert('Failed to check tasks: ' + error.message);
+            }
+        }
+
+        async function approve(id) {
+            try {
+                await fetch(`${API}/confirmations/${id}/approve`, { method: 'POST' });
+                alert('Approved!');
+                checkConfirmations();
+                checkTasks();
+            } catch (error) {
+                alert('Failed to approve: ' + error.message);
+            }
+        }
+
+        async function reject(id) {
+            try {
+                await fetch(`${API}/confirmations/${id}/reject`, { method: 'POST' });
+                alert('Rejected!');
+                checkConfirmations();
+            } catch (error) {
+                alert('Failed to reject: ' + error.message);
+            }
+        }
+
+        // Auto-refresh on load
+        window.onload = () => {
+            checkConfirmations();
+            checkTasks();
+        };
+    </script>
+</body>
+</html>
