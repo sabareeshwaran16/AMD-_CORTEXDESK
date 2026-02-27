@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirmations - CortexDesk</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 1000px; margin: 0 auto; }
+        h1 { color: #2c3e50; }
+        .confirmation { padding: 15px; margin: 10px 0; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; }
+        .task-text { font-weight: bold; margin-bottom: 10px; }
+        .meta { font-size: 12px; color: #666; margin: 5px 0; }
+        .buttons { margin-top: 10px; }
+        button { padding: 8px 16px; margin-right: 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .approve { background: #27ae60; color: white; }
+        .reject { background: #e74c3c; color: white; }
+        .status { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
+        .pending { background: #ffc107; color: black; }
+        .approved { background: #27ae60; color: white; }
+        .rejected { background: #e74c3c; color: white; }
+    </style>
+</head>
+<body>
+    <h1>📋 Task Confirmations</h1>
+    <p>Review and approve/reject extracted tasks</p>
+    <button onclick="loadConfirmations()">🔄 Refresh</button>
+    <hr>
+    <div id="confirmations"></div>
+
+    <script>
+        const API = 'http://localhost:8001';
+
+        async function loadConfirmations() {
+            try {
+                const response = await fetch(`${API}/confirmations`);
+                const data = await response.json();
+                
+                const container = document.getElementById('confirmations');
+                
+                if (data.count === 0) {
+                    container.innerHTML = '<p>No pending confirmations. Upload a document to extract tasks!</p>';
+                    return;
+                }
+
+                let html = `<h3>Found ${data.count} items</h3>`;
+                
+                data.pending.forEach(item => {
+                    const task = item.data;
+                    const statusClass = item.status || 'pending';
+                    
+                    html += `
+                        <div class="confirmation">
+                            <span class="status ${statusClass}">${item.status || 'PENDING'}</span>
+                            <div class="task-text">${task.task || task.description || 'No description'}</div>
+                            <div class="meta">
+                                <strong>Assignee:</strong> ${task.assignee || 'Unassigned'} | 
+                                <strong>Priority:</strong> ${task.priority || 'Normal'} | 
+                                <strong>Deadline:</strong> ${task.deadline || 'Not set'}
+                            </div>
+                            <div class="meta">
+                                <strong>Confidence:</strong> ${(item.confidence * 100).toFixed(0)}% | 
+                                <strong>Created:</strong> ${new Date(item.created_at).toLocaleString()}
+                            </div>
+                            ${item.status === 'pending' || !item.status ? `
+                                <div class="buttons">
+                                    <button class="approve" onclick="approve('${item.id}')">✓ Approve</button>
+                                    <button class="reject" onclick="reject('${item.id}')">✗ Reject</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } catch (error) {
+                alert('Error loading confirmations: ' + error.message);
+            }
+        }
+
+        async function approve(id) {
+            try {
+                await fetch(`${API}/confirmations/${id}/approve`, { method: 'POST' });
+                alert('✓ Approved!');
+                loadConfirmations();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function reject(id) {
+            try {
+                await fetch(`${API}/confirmations/${id}/reject`, { method: 'POST' });
+                alert('✗ Rejected!');
+                loadConfirmations();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Load on page load
+        window.onload = loadConfirmations;
+        
+        // Auto-refresh every 5 seconds
+        setInterval(loadConfirmations, 5000);
+    </script>
+</body>
+</html>
