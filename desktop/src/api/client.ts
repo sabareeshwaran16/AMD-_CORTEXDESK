@@ -55,14 +55,18 @@ export async function ingestFiles(files: File[]) {
     }
   }
 
-  // Legacy backend: upload one file at a time
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Not authenticated');
+
   const results = [];
   for (const file of files) {
     const form = new FormData();
     form.append('file', file);
     
     try {
-      const res = await fileUploadClient.post('/upload', form);
+      const res = await fileUploadClient.post('/upload', form, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       results.push({
         filename: file.name,
         status: res.data.status === 'processing' ? 'ingested' : res.data.status,

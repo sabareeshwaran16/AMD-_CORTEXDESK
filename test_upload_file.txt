@@ -1,8 +1,0 @@
-This is a test document for upload testing.
-
-Action Items:
-- Complete the project report by Friday
-- Schedule team meeting for next week
-- Review the code changes
-
-Deadline: End of this week

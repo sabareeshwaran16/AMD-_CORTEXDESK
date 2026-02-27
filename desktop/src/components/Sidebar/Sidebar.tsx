@@ -1,7 +1,24 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const username = localStorage.getItem('username');
+
+  const handleLogout = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await fetch('http://localhost:8001/auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch {}
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    navigate('/login');
+  };
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: '📊' },
@@ -36,9 +53,10 @@ function Sidebar() {
           ))}
         </ul>
       </nav>
-      <div className="p-4 border-t border-gray-800 text-xs text-gray-400">
-        <div>🔒 100% Offline</div>
-        <div className="mt-1">No cloud calls</div>
+      <div className="p-4 border-t border-gray-800">
+        <div className="text-sm text-gray-400 mb-2">👤 {username}</div>
+        <button onClick={handleLogout} className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Logout</button>
+        <div className="text-xs text-gray-400 mt-3">🔒 100% Offline</div>
       </div>
     </aside>
   );

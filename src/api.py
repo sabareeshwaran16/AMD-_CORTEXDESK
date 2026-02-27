@@ -1,15 +1,17 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
 import os
 import sys
 import shutil
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.core.workspace_assistant import WorkspaceAssistant
+from src.auth import AuthManager
 
 assistant = None
+auth_manager = AuthManager()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,6 +38,24 @@ class TaskUpdate(BaseModel):
     task_id: int
     status: str
 
+class SignupRequest(BaseModel):
+    username: str
+    password: str
+    email: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+def verify_auth(authorization: Optional[str] = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.replace("Bearer ", "")
+    session = auth_manager.verify_token(token)
+    if not session:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return session
+
 @app.get("/")
 async def root():
     return {
@@ -44,12 +64,33 @@ async def root():
         "status": "running"
     }
 
+@app.post("/auth/signup")
+async def signup(req: SignupRequest):
+    return auth_manager.signup(req.username, req.password, req.email)
+
+@app.post("/auth/login")
+async def login(req: LoginRequest):
+    return auth_manager.login(req.username, req.password)
+
+@app.post("/auth/logout")
+async def logout(authorization: Optional[str] = Header(None)):
+    if not authorization:
+        return {"success": False, "error": "No token provided"}
+    token = authorization.replace("Bearer ", "")
+    return auth_manager.logout(token)
+
+@app.get("/auth/verify")
+async def verify(authorization: Optional[str] = Header(None)):
+    session = verify_auth(authorization)
+    return {"success": True, "user": session["username"]}
+
 @app.get("/status")
 async def get_status():
     return assistant.get_status()
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...), authorization: Optional[str] = Header(None)):
+    verify_auth(authorization)
     try:
         upload_dir = "data/uploads"
         os.makedirs(upload_dir, exist_ok=True)

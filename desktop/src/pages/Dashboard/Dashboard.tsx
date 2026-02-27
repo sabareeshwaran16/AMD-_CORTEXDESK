@@ -8,12 +8,55 @@ function Dashboard() {
   const [detectedTasks, setDetectedTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
+  const [confirmations, setConfirmations] = useState<any[]>([]);
   const navigate = useNavigate();
 
   // Check backend connection on mount
   useEffect(() => {
     checkBackendHealth().then(setBackendConnected);
+    loadConfirmations();
+    const interval = setInterval(loadConfirmations, 5000);
+    return () => clearInterval(interval);
   }, []);
+
+  const loadConfirmations = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8001/confirmations', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await response.json();
+      setConfirmations(data.pending || []);
+    } catch (error) {
+      console.error('Failed to load confirmations:', error);
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:8001/confirmations/${id}/approve`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      loadConfirmations();
+    } catch (error) {
+      console.error('Failed to approve:', error);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:8001/confirmations/${id}/reject`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      loadConfirmations();
+    } catch (error) {
+      console.error('Failed to reject:', error);
+    }
+  };
 
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -214,6 +257,61 @@ function Dashboard() {
           <p className="text-gray-600">Search your indexed documents</p>
         </div>
       </div>
+
+      {/* Confirmations Section */}
+      {confirmations.length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">📋 Pending Confirmations ({confirmations.length})</h3>
+            <button onClick={loadConfirmations} className="text-blue-600 hover:text-blue-700">🔄 Refresh</button>
+          </div>
+          <div className="space-y-3">
+            {confirmations.map((item) => {
+              const task = item.data;
+              return (
+                <div key={item.id} className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-1 bg-yellow-200 text-yellow-800 text-xs font-bold rounded">
+                          {item.status || 'PENDING'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {(item.confidence * 100).toFixed(0)}% confidence
+                        </span>
+                      </div>
+                      <div className="font-semibold text-sm mb-1">
+                        {task.task || task.description || 'No description'}
+                      </div>
+                      <div className="text-xs text-gray-600 space-y-1">
+                        <div>Assignee: {task.assignee || 'Unassigned'} | Priority: {task.priority || 'Normal'}</div>
+                        <div>Deadline: {task.deadline || 'Not set'}</div>
+                        <div>Created: {new Date(item.created_at).toLocaleString()}</div>
+                      </div>
+                    </div>
+                    {(item.status === 'pending' || !item.status) && (
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          onClick={() => handleApprove(item.id)}
+                          className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                        >
+                          ✓ Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(item.id)}
+                          className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                        >
+                          ✗ Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
